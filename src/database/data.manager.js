@@ -1,4 +1,4 @@
-const { connectToDB, disconnect } = require('./mongodb.js');
+const { connectToDB, disconnect } = require('../../connection_db.js');
 
 async function generateId() {
     try {
@@ -49,21 +49,36 @@ async function createItem(props) {
     } catch (e) {
         throw new Error(e);
     } finally {
-        disconnect()
+        await disconnect()
     }
 }
 async function destroyItem(id) {
     try {
         const db = await connectToDB("prendas");
-        if (!db) throw new Error("Cannot connect to database")
         const item = await db.findOne({ codigo: { $eq: Number(id) } });
-        if (!item) throw new Error("Item not found");
+        if (!item) throw new Error({ name: "400", message: "Item not found" });
         await db.deleteOne({ codigo: { $eq: Number(id) } })
         return item;
     } catch (e) {
-        throw new Error(e);
+        throw new Error({ name: "500", message: "Se ha generado un error en el servidor", error: e });
     } finally {
-        disconnect()
+        await disconnect()
     }
 }
-module.exports = { getOneById, getAllItems, createItem, destroyItem };
+async function updateItem(params) {
+    // nombre, precio, categoria
+    if (!params?.nombre || !params?.precio || !params?.categoria) throw new Error("Faltan datos relevantes")
+    try {
+        const db = await connectToDB("prendas");
+        const item = await db.findOne({ codigo: { $eq: Number(params.codigo) } })
+        if (!item) throw new Error({ name: "400", message: "El código no corresponde a un mueble registrado" })
+        item.precio = params.precio;
+        await db.updateOne({ codigo: { $eq: Number(params.codigo) } }, { $set: item })
+        return item;
+    } catch (e) {
+        throw new Error({ name: "500", message: "Se ha generado un error en el servidor", error: e });
+    } finally {
+        await disconnect();
+    }
+}
+module.exports = { getOneById, getAllItems, createItem, destroyItem, updateItem };

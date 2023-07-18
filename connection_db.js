@@ -2,11 +2,12 @@ const path = require("path");
 require('dotenv').config();
 const { MongoClient } = require("mongodb");
 // Database connection
-const client = new MongoClient(process.env.DATABASE, {
+const client = new MongoClient(process.env.DATABASE_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     minPoolSize: 15
 });
+const database_name = process.env.DATABASE_NAME;
 
 async function connect() {
     console.log("Connecting")
@@ -32,7 +33,7 @@ async function disconnect() {
 }
 async function connectToDB(collectionName) {
     const connection = await connect();
-    const db = connection.db("store")
+    const db = connection.db(database_name)
     const collection = db.collection(collectionName)
     return collection;
 }
