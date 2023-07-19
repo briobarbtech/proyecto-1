@@ -12,13 +12,62 @@ server.use(express.json());
 server.use(express.urlencoded({ extended: true }))
 
 /*  Routes CRUD */
+
+// POST	http://127.0.0.1:3005/api/v1/muebles	Crea un nuevo registro
+
+server.post('/api/v1/muebles', (req, res) => {
+    const { nombre, precio, categoria } = req.body;
+    createItem({ nombre, precio, categoria })
+        .then((item) => res.status(201).send(JSON.stringify({ message: "Registro creado", payload: item })))
+        .catch((e) => res.status(400).send(JSON.stringify({ message: e.message })));
+})
+
+// PUT	http://127.0.0.1:3005/api/v1/muebles/1	Modifica un registro en específico
+//TODO
+server.put('/api/v1/muebles/:id', (req, res) => {
+    const { id } = req.params;
+    const { nombre, precio, categoria } = req.body;
+    let newItem = { codigo: Number(id) };
+    if (nombre) newItem.nombre = nombre;
+    if (precio) newItem.precio = precio;
+    if (categoria) newItem.categoria = categoria;
+    updateItem(newItem)
+        .then((mueble) => res.status(200).send(JSON.stringify({ message: 'Registro actualizado', payload: mueble })))
+        .catch((e) => res.status(400).send(JSON.stringify({ message: e.message })));
+})
+
+// DELETE	http://127.0.0.1:3005/api/v1/muebles/1	Elimina un registro en específico
+server.delete('/api/v1/muebles/:id', (req, res) => {
+    const { id } = req.params;
+    destroyItem(Number(id))
+        .then((item) => res.status(200).send(JSON.stringify({ message: 'Registro eliminado' })))
+        .catch((e) => res.status(400).send(JSON.stringify({ message: e.message })));
+})
+
 // GET	http://127.0.0.1:3005/api/v1/muebles/1	Obtiene un registro en específico
+server.get('/api/v1/muebles/:id', (req, res) => {
+    const { id } = req.params;
+    getOneById(Number(id))
+        .then((item) => res.status(200).send(JSON.stringify({ message: "Exito", payload: item })))
+        .catch((e) => res.status(400).send(JSON.stringify({ message: e.message })))
+})
+
+// GET	http://127.0.0.1:3005/api/v1/muebles	Obtiene los registros (permite filtros)
+server.get('/api/v1/muebles', (req, res) => {
+    const { categoria, precio_gte, precio_lte } = req.query;
+    getAllItems({categoria, precio_gte: Number(precio_gte),precio_lte: Number(precio_lte)})
+        .then((items) => res.status(200).send(JSON.stringify({message:"Éxito", payload: items })))
+        .catch((e) => res.status(400).send(JSON.stringify({ message: e.message })))
+})
+
+// GET	http://127.0.0.1:3005/api/v1/muebles/1	Obtiene un registro en específico
+/*
 server.get('/api/v1/muebles/:id', (req, res) => {
     const { id } = req.params;
     getOneById(Number(id))
         .then((item) => res.status(200).send(JSON.stringify({ payload: item })))
         .catch((e) => res.status(400))
-})/*
+})
 // GET	http://127.0.0.1:3005/api/v1/muebles	Obtiene los registros (permite filtros)
 server.get('/api/v1/muebles', (req, res) => {
     const { categoria, precio_gte, precio_lte } = req.query;
